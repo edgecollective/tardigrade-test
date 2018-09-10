@@ -30,7 +30,7 @@ os.mount(sd,'/sd')
 output=os.listdir('/sd')
 print(output)
 
-f=open('/sd/data.txt','w')
+f=open('/sd/data.txt','a')
 data_str="%.3f %3.f\n" % (temp_acc,temp)
 f.write(data_str)
 f.close()
