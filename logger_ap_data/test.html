@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+<script>
+var source = new EventSource("events");
+source.onmessage = function(event) {
+    document.getElementById("result").innerHTML = event.data + "<br>";
+}
+source.onerror = function(error) {
+    console.log(error);
+    document.getElementById("result").innerHTML = "server hiccup:" + error + "<br>";
+}
+</script>
+</head>
+<body>
+Get the data <a href="data">here</a>
+<div id="header" style="font-size: 30pt">~~WATERBEAR~~</div>
+<div id="result" style="font-size: 30pt"></div>
+</body>
+</html>
