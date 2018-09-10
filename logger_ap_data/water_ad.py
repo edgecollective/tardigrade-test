@@ -94,9 +94,10 @@ f.close()
 
 def blink(duration):
     led.value(1)
-    time.sleep(duration)
+    await uasyncio.sleep(duration)
     led.value(0)
-    time.sleep(duration)
+    await uasyncio.sleep(duration)
+
 
 def data(req, resp):
     print('getting data')
