@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+<style>
+html {
+  font-family: sans-serif;
+}
+
+body {
+  font-family: sans-serif;
+   font-size: 25pt;
+}
+
+data {
+  font-family: sans-serif;
+   font-size: 20pt;
+}
+
+table {
+  border-collapse: collapse;
+  border: 2px solid rgb(200,200,200);
+  letter-spacing: 1px;
+}
+
+td, th {
+  border: 1px solid rgb(190,190,190);
+  padding: 10px 20px;
+}
+
+th {
+  background-color: rgb(235,235,235);
+}
+
+td {
+  text-align: center;
+}
+
+tr:nth-child(even) td {
+  background-color: rgb(250,250,250);
+}
+
+tr:nth-child(odd) td {
+  background-color: rgb(245,245,245);
+}
+
+ 
+caption {
+  padding: 10px;
+}
+</style>
+<script>
+var source = new EventSource("events");
+source.onmessage = function(event) {
+    document.getElementById("result").innerHTML = event.data + "<br>";
+}
+source.onerror = function(error) {
+    console.log(error);
+    document.getElementById("result").innerHTML = "(disconnected)" + error + "<br>";
+}
+</script>
+</head>
+<body>
+
+<div id="header">~~~~~WATERBEAR~~~~~</div>
+<table>
+      <tr>
+        <td>i</td>
+        <td>temp_acc(C)</td>
+        <td>temp (C)</td>
+        <td>pressure (mbar)</td>
+         <td>depth (m)</td>
+      </tr>
+      <tr id="result"></tr>
+      </table>
+      <div id="header">~~~~~~~~~~~~~~~~~~~</div>
+<div id="data">Download: <a href="data">full dataset</a></div>
+
+
+</body>
+</html>

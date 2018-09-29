@@ -12,7 +12,7 @@ from machine import Pin
 from machine import SPI
 from machine import I2C
 
-filename='data3.txt'
+filename='data1.txt'
 
 led = Pin(13,Pin.OUT)
 
@@ -45,7 +45,7 @@ spi2=SPI(2,baudrate=5000000,sck=sck,mosi=mosi,miso=miso)
 
 #f=open('/sd/data.txt','a')
 
-DISPLAY=True
+DISPLAY=False
 
 if DISPLAY:
     import ssd1306
@@ -106,7 +106,7 @@ def blink(duration):
 
 def data(req, resp):
     print('getting data')
-    g=open("./"+filename,'r')
+    g=open('/sd/'+filename,'r')
     yield from picoweb.start_response(resp)
     for line in g:
         yield from resp.awrite(line)
@@ -165,48 +165,22 @@ def push_count():
             temp_acc=t.getTemp()
             temp,pressure,depth=p.get_measurement()
             
-            f=open("./"+filename,'a')
+            #f=open('/sd/'+filename,'a')
             
             data_str="%d %.3f %.3f %.3f %.3f" % (i,temp_acc,temp,pressure,depth)
             print("host:"+ip[0])
             print(data_str)
-            f.write(data_str+"\n")
-            f.close()
+            #f.write(data_str)
+            #f.close()
             
             if DISPLAY:
-                oled.fill(0)
-                
-                linenum=0
-                linestep=9
-                
-                oled.text(ip[0]+":8081",0,linenum)
-                
-                linenum+=linestep
-                display_text="i=%d" % i
-                oled.text(display_text,0,linenum)
-                
-                linenum+=linestep
-                display_text="ta:%.1f tb:%.1f" % (temp_acc,temp)
-                oled.text(display_text,0,linenum)
-                
-                linenum+=linestep
-                display_text="p:%.3f" % pressure
-                oled.text(display_text,0,linenum)
-                
-                linenum+=linestep
-                display_text="d:%.4f" % depth
-                oled.text(display_text,0,linenum)
-                
-                linenum+=linestep
-                display_text="fn:%s" % filename
-                oled.text(display_text,0,linenum)
-                
-                oled.show()
+                    display_text="%s" % str(temp)
+                    update_display(display_text)
             html_str="<td> %d </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td>\n" % (i,temp_acc,temp,pressure,depth)
             await push_event(html_str)
             i += 1
-        except Exception as e:
-                print(str(e))
+        except:
+            print("some error?")
         blink(1)
         gc.collect()
         await uasyncio.sleep(1)
@@ -223,7 +197,7 @@ app = picoweb.WebApp(None, ROUTES)
 # 1 (True) debug logging
 # 2 extra debug logging
 print("host:"+ip[0])
-#print("SCL=",SCL)
+print("SCL=",SCL)
 
 if DISPLAY:
     oled.fill(0)

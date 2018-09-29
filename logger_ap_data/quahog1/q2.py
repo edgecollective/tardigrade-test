@@ -88,12 +88,19 @@ ip=ap.ifconfig()
 #ip = station.ifconfig()
 
 
-event_sinks = set()
+
 
 #
 # Webapp part
 #
-f=open('test.html')
+
+app = picoweb.WebApp(None)
+event_sinks = set()
+
+
+counter=0
+
+f=open('water2.html')
 html=f.read()
 f.close()
 
@@ -103,7 +110,7 @@ def blink(duration):
     led.value(0)
     await uasyncio.sleep(duration)
 
-
+@app.route("/data")
 def data(req, resp):
     print('getting data')
     g=open("./"+filename,'r')
@@ -112,11 +119,35 @@ def data(req, resp):
         yield from resp.awrite(line)
     g.close()
 
+@app.route('/parse_data', methods=['GET', 'POST'])
+def goofy(request, response):
+    print("wheee")
+    global filename
+    global counter
+    if request.method == 'POST':
+        print(request.headers)
+        yield from request.read_form_data()
+        if request.form.get('test'):
+            print("hello")
+            content=request.form['test'][0]
+            filename=content
+            #rfm9x.send(str(content))
+            print("Changing filename to:",content)
+            #await push_event("- %s" % str(content))
+            counter=0
+            yield from picoweb.start_response(response, "application/json")
+            yield from response.awriteiter(ijson.idumps({'note': 'huzzah', 'success': 1}))
+            return
 
+        yield from picoweb.jsonify(response, {'success': 0})
+        return
+
+@app.route("/")
 def index(req, resp):
     yield from picoweb.start_response(resp)
     yield from resp.awrite(html)
 
+@app.route("/events")
 def events(req, resp):
     global event_sinks
     print("Event source %r connected" % resp)
@@ -125,12 +156,6 @@ def events(req, resp):
     yield from resp.awrite("\r\n")
     event_sinks.add(resp)
     return False
-
-ROUTES = [
-    ("/", index),
-    ("/events", events),
-    ("/data",data),
-]
 
 #
 # Background service part
@@ -157,7 +182,8 @@ def push_event(ev):
 
 
 def push_count():
-    i = 0
+    global counter
+    counter=0
     while True:
         try:
             #measure
@@ -167,7 +193,7 @@ def push_count():
             
             f=open("./"+filename,'a')
             
-            data_str="%d %.3f %.3f %.3f %.3f" % (i,temp_acc,temp,pressure,depth)
+            data_str="%d %.3f %.3f %.3f %.3f" % (counter,temp_acc,temp,pressure,depth)
             print("host:"+ip[0])
             print(data_str)
             f.write(data_str+"\n")
@@ -182,7 +208,7 @@ def push_count():
                 oled.text(ip[0]+":8081",0,linenum)
                 
                 linenum+=linestep
-                display_text="i=%d" % i
+                display_text="i=%d" % counter
                 oled.text(display_text,0,linenum)
                 
                 linenum+=linestep
@@ -202,9 +228,9 @@ def push_count():
                 oled.text(display_text,0,linenum)
                 
                 oled.show()
-            html_str="<td> %d </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td>\n" % (i,temp_acc,temp,pressure,depth)
+            html_str="<td> %d </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td> <td> %.3f </td> <td> %s </td>\n" % (counter,temp_acc,temp,pressure,depth,filename)
             await push_event(html_str)
-            i += 1
+            counter += 1
         except Exception as e:
                 print(str(e))
         blink(1)
@@ -216,7 +242,7 @@ loop = uasyncio.get_event_loop()
 loop.create_task(push_count())
 
 #app = picoweb.WebApp(__name__, ROUTES)
-app = picoweb.WebApp(None, ROUTES)
+
 # debug values:
 # -1 disable all logging
 # 0 (False) normal logging: requests and errors
