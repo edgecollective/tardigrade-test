@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <META HTTP-EQUIV="Content-Style-Type" CONTENT="text/css">
+<style>
+html {
+  font-family: sans-serif;
+}
+
+body {
+  font-family: sans-serif;
+   font-size: 12px;
+}
+
+path { 
+  stroke: steelblue;
+	stroke-width: 2;
+	fill: none;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+}
+
+
+data {
+  font-family: sans-serif;
+   font-size: 20pt;
+}
+
+table {
+  border-collapse: collapse;
+  border: 2px solid rgb(200,200,200);
+  letter-spacing: 1px;
+}
+
+td, th {
+  border: 1px solid rgb(190,190,190);
+  padding: 10px 20px;
+}
+
+th {
+  background-color: rgb(235,235,235);
+}
+
+td {
+  text-align: center;
+}
+
+tr:nth-child(even) td {
+  background-color: rgb(250,250,250);
+}
+
+tr:nth-child(odd) td {
+  background-color: rgb(245,245,245);
+}
+
+ 
+caption {
+  padding: 10px;
+}
+</style>
+
+    <script>
+var source = new EventSource("events");
+source.onmessage = function(event) {
+    document.getElementById("result").innerHTML = event.data + "<br>";
+}
+source.onerror = function(error) {
+    console.log(error);
+    //document.getElementById("result").innerHTML += "server hiccup:" + error + "<br>";
+}
+
+</script>
+    <script src="static/js/jquery.js"></script>
+    <script src="static/js/d3.v3.min.js"></script>
+    </head>
+    <body>
+
+      <div id="header">~~~~~~~~~WATERBEAR~~~~~~</div>
+      
+<table>
+      <tr>
+        <td>i</td>
+        <td>temp_acc(C)</td>
+        <td>temp (C)</td>
+        <td>pressure (mbar)</td>
+         <td>depth (m)</td>
+         <td>filename</td>
+      </tr>
+      <tr id="result"></tr>
+      </table>
+      
+
+<div id="data">Download: <a href="data">full dataset</a></div>
+
+    <form id="sender">
+        New datafile name: 
+        <input name="test" class="textbox">
+        <input type="submit">
+    </form>
+
+
+    <script>
+    $("#sender").submit(function(){
+        var form = $(this);
+        $.ajax({
+          type: 'POST',
+          url: "/parse_data",
+          data: form.serialize(),
+          contentType: 'application/json',
+          success: function(data){
+            console.log("POST successful")
+          }
+        });
+    });
+    </script>
+
+<br>
+<br>
+<script>
+
+// Set the dimensions of the canvas / graph
+var	margin = {top: 30, right: 20, bottom: 30, left: 50},
+	width = 400 - margin.left - margin.right,
+	height = 220 - margin.top - margin.bottom;
+
+// Parse the date / time
+var	parseDate = d3.time.format("%S").parse;
+
+// Set the ranges
+//var	x = d3.time.scale().range([0, width]);
+var x = d3.scale.linear().range([0,width]);
+var	y = d3.scale.linear().range([height, 0]);
+
+// Define the axes
+var	xAxis = d3.svg.axis().scale(x)
+	.orient("bottom").ticks(5);
+
+var	yAxis = d3.svg.axis().scale(y)
+	.orient("left").ticks(5);
+
+
+    
+// Adds the svg canvas
+var	chart1 = d3.select("body")
+	.append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// Get the data
+d3.csv("summary_data", function(error, data) {
+    
+    //data=data_in.slice(Math.max(data_in.length - 10, 1))
+    // Define the line
+var	valueline = d3.svg.line()
+	.x(function(d) { return x(d.counter); })
+	.y(function(d) { return y(d.temp_acc); });
+	
+	
+    data.forEach(function(d) {
+		//d.counter = parseDate(d.counter);
+		d.counter=d.counter;
+		d.temp_acc = +d.temp_acc;
+	});
+	
+	// Scale the range of the data
+	x.domain(d3.extent(data, function(d) { return d.counter; }));
+	y.domain([0, d3.max(data, function(d) { return d.temp_acc; })]);
+
+	// Add the valueline path.
+	chart1.append("path")
+		.attr("class", "line")
+		.attr("d", valueline(data));
+
+	// Add the X Axis
+	chart1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
+
+	// Add the Y Axis
+	chart1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+		
+	chart1.append("text")
+      .attr("class", "title")
+      .attr("x", width/2)
+      .attr("y", 0 - (margin.top / 2))
+      .attr("text-anchor", "middle")
+      .text("TSYS01: Temp (C)");
+
+
+});
+
+// Adds the svg canvas
+var	chart2 = d3.select("body")
+	.append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		
+// Get the data
+d3.csv("summary_data", function(error, data) {
+
+
+var	valueline = d3.svg.line()
+	.x(function(d) { return x(d.counter); })
+	.y(function(d) { return y(d.temp); });
+    //data=data_in.slice(Math.max(data_in.length - 10, 1))
+
+	data.forEach(function(d) {
+		//d.counter = parseDate(d.counter);
+		d.counter=d.counter;
+		d.temp = +d.temp;
+	});
+
+	// Scale the range of the data
+	x.domain(d3.extent(data, function(d) { return d.counter; }));
+	y.domain([0, d3.max(data, function(d) { return d.temp; })]);
+
+	// Add the valueline path.
+	chart2.append("path")
+		.attr("class", "line")
+		.attr("d", valueline(data));
+
+	// Add the X Axis
+	chart2.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
+
+	// Add the Y Axis
+	chart2.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+		
+	  chart2.append("text")
+      .attr("class", "title")
+      .attr("x", width/2)
+      .attr("y", 0 - (margin.top / 2))
+      .attr("text-anchor", "middle")
+      .text("MS5837: Temp (C):");
+
+});
+
+
+</script>
+
+
+    </body>
+</html>
