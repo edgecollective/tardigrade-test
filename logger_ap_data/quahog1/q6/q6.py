@@ -124,7 +124,7 @@ def blink(duration):
 
 def file_len(fname,file_div):
     fcounter=0
-    g=open("./"+filename,'r')
+    g=open('/sd/'+filename,'r')
     for line in g:
         fcounter+=1
     g.close()
@@ -148,15 +148,16 @@ def data(req, resp):
 @app.route("/summary_data")
 def summary_data(req, resp):
     print('getting data')
-    chunks=file_len(filename,MYFILE_DIV)
+    #chunks=file_len(filename,MYFILE_DIV)
     #g=open("./"+filename,'r')
     g=open('/sd/'+filename,'r')
     yield from picoweb.start_response(resp)
     fcounter=0
     for line in g:
-        if(fcounter%chunks==0):
-            yield from resp.awrite(line)
-        fcounter+=1
+        #if(fcounter%chunks==0):
+        print(line)
+        yield from resp.awrite(line)
+        #fcounter+=1
     g.close()
 
 @app.route('/parse_data', methods=['GET', 'POST'])
@@ -224,7 +225,7 @@ def push_event(ev):
 def push_count():
     global counter
     counter=0
-    f=open("./"+filename,'a')
+    f=open('/sd/'+filename,'w')
     data_str="counter,temp_acc,temp,pressure,depth"
     f.write(data_str+"\n")
     f.close()
